@@ -16,6 +16,7 @@ img_counter = len(os.listdir("dataset/" + name))
 
 while True:
     for frame in cam.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+        
         image = frame.array
         cv2.imshow("Press Space to take a photo", image)
         rawCapture.truncate(0)
@@ -25,6 +26,9 @@ while True:
         
         if k%256 == 27: # ESC pressed
             break
+
+        if k%256 == 13: # ESC pressed
+            print("hi")
         elif k%256 == 32:
             # SPACE pressed
             img_name = "dataset/"+ name +"/image_{}.jpg".format(img_counter)
