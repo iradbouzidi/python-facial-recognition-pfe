@@ -82,6 +82,20 @@ def send_mail(name, img_name):
         server.sendmail(sender_email, receiver_email, text)
 
 
+def put_person(currentname):
+    dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
+    now = datetime.now()
+    date_time = now.strftime("%b %d %Y %H:%M:%S")
+    Id = int(now.strftime("%Y%d%m%H%M%S"))
+    dynamodb.Table(currentname.lower()).put_item(
+        Item={
+            'Id': Id,
+            'Name': f'{currentname.lower()}',
+            "Time": f'{date_time}',
+        }
+    )
+
+
 # load the known faces and embeddings along with OpenCV's Haar
 # cascade for face detection
 print("[INFO] loading encodings + face detector...")
@@ -97,9 +111,10 @@ time.sleep(2.0)
 # start the FPS counter
 fps = FPS().start()
 
+
 # loop over frames from the video file stream
 while True:
-    # grab the frame from the threaded video stream and resize it
+    # gab the frame from the threaded video stream and resize it
     # to 500px (to speedup processing)
     frame = vs.read()
     frame = imutils.resize(frame, width=500)
@@ -157,7 +172,6 @@ while True:
                 person = currentname
                 # Take a picture to send in the email
                 time_now = datetime.now().strftime('%b %d %Y %H:%M:%S')
-
                 img_name = person + " - " + time_now + ".jpg"
 
                 time.sleep(2)
@@ -166,8 +180,9 @@ while True:
 
                 # Now send me an email to let me know who is at the door
                 send_mail(name, img_name)
+                put_person(currentname)
 
-        # update the list of names
+                # update the list of names
 
         names.append(name)
 
@@ -183,8 +198,7 @@ while True:
     # display the image to our screen
     cv2.imshow("Facial Recognition is Running", frame)
     key = cv2.waitKey(1) & 0xFF
-
-    # if the `q` key was pressed, break from the loop
+    # quit when 'q' key is pressed
     if key == ord("q"):
         break
 
@@ -195,18 +209,6 @@ while True:
 fps.stop()
 print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
 print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
-dynamodb = boto3.resource('dynamodb', region_name='us-west-2')
-now = datetime.now()
-
-date_time = now.strftime("%b %d %Y %H:%M:%S")
-Id = int(now.strftime("%Y%d%m%H%M%S"))
-dynamodb.Table(currentname.lower()).put_item(
-    Item={
-        'Id': Id,
-        'Name': f'{currentname.lower()}',
-        "Time": f'{date_time}',
-    }
-)
 
 # do a bit of cleanup
 cv2.destroyAllWindows()
